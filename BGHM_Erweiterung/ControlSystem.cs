@@ -2,9 +2,7 @@ using System;
 using Crestron.SimplSharp;                          	// For Basic SIMPL# Classes
 using Crestron.SimplSharpPro;                       	// For Basic SIMPL#Pro classes
 using Crestron.SimplSharpPro.CrestronThread;        	// For Threading
-using Crestron.SimplSharpPro.Diagnostics;		    	// For System Monitor Access
 using Crestron.SimplSharpPro.DeviceSupport;             // For Generic Device Support
-using Crestron.SimplSharpPro.DM.Streaming;
 using Crestron.SimplSharpPro.UI;
 using Crestron.SimplSharp.CrestronIO;
 using Crestron.SimplSharpPro.Lighting;
@@ -24,21 +22,21 @@ namespace BGHM_Erweiterung
 {
     public class ControlSystem : CrestronControlSystem
     {
-        private Interlock SenkenWahl;
-        private Interlock PageSelection;
-        public Ts1070 Panel_E026;
-        public Ts1070 Panel_E002;
-        private Din2Mc2 Leinwand1;
-        private Din2Mc2 Leinwand2;
-        private NVXRouting NVXRouter;
-        private Passwort AdminAccess;
-        private bool Kopplung;
-        private Volume E002_Volume;
-        private Volume[] E026_Volume;
-        private QSYS DSP;
+        private Interlock _senkenWahl;
+        private Interlock _pageSelection;
+        public readonly Ts1070 PanelE026;
+        public readonly Ts1070 PanelE002;
+        private Din2Mc2 Leinwand1 { get; }
+        private Din2Mc2 Leinwand2 { get; }
+        private NvxRouting _nvxRouter;
+        private Passwort _adminAccess;
+        private bool _kopplung;
+        private Volume _e002Volume;
+        private Volume[] _e026Volume;
+        private Qsys _dsp;
 
 
-        private uint selected_Receiver = 0;
+        private uint _selectedReceiver;
         public ControlSystem()
             : base()
         {
@@ -55,19 +53,19 @@ namespace BGHM_Erweiterung
                 CrestronEnvironment.EthernetEventHandler += new EthernetEventHandler(_ControllerEthernetEventHandler);
 
                 //Create Touchscreens
-                Panel_E026 = new Ts1070(4, this);
+                PanelE026 = new Ts1070(4, this);
                 //Panel_E026.Button
 
-                if (Panel_E026.Register() != eDeviceRegistrationUnRegistrationResponse.Success)
+                if (PanelE026.Register() != eDeviceRegistrationUnRegistrationResponse.Success)
                 {
-                    ErrorLog.Error("Failure in myPanel registration = {0}", Panel_E026.RegistrationFailureReason);
+                    ErrorLog.Error("Failure in myPanel registration = {0}", PanelE026.RegistrationFailureReason);
                 }
 
-                Panel_E002 = new Ts1070(3, this);
+                PanelE002 = new Ts1070(3, this);
 
-                if (Panel_E002.Register() != eDeviceRegistrationUnRegistrationResponse.Success)
+                if (PanelE002.Register() != eDeviceRegistrationUnRegistrationResponse.Success)
                 {
-                    ErrorLog.Error("Failure in myPanel registration = {0}", Panel_E002.RegistrationFailureReason);
+                    ErrorLog.Error("Failure in myPanel registration = {0}", PanelE002.RegistrationFailureReason);
                 }
 
                 Leinwand1 = new Din2Mc2(3, this);
@@ -81,17 +79,17 @@ namespace BGHM_Erweiterung
         }
         private void InitializePanel()
         {
-            string SGDFilePath = Path.Combine(Directory.GetApplicationDirectory(), "BGHM_Erweiterung_Groﬂ_V0.1_TS1070.sgd");
+            string sgdFilePath = Path.Combine(Directory.GetApplicationDirectory(), "BGHM_Erweiterung_Groﬂ_V0.1_TS1070.sgd");
 
 
-            Panel_E026.SigChange +=Panel_E026_SigChange;
+            PanelE026.SigChange +=Panel_E026_SigChange;
 
-            if (File.Exists(SGDFilePath))
+            if (File.Exists(sgdFilePath))
             {
                 // Load the SGD File into the panel definition
-                Panel_E026.LoadSmartObjects(SGDFilePath);
+                PanelE026.LoadSmartObjects(sgdFilePath);
 
-                foreach (KeyValuePair<uint, SmartObject> pair in Panel_E026.SmartObjects)
+                foreach (KeyValuePair<uint, SmartObject> pair in PanelE026.SmartObjects)
                 {
                     pair.Value.SigChange += MySmartObjectSigChange;
                 }
@@ -101,7 +99,7 @@ namespace BGHM_Erweiterung
                 ErrorLog.Error("SmartGraphics Definition file not found! Set .sgd file to 'Copy Always'!");
             }
 
-            Panel_E002.SigChange +=Panel_E002_SigChange;
+            PanelE002.SigChange +=Panel_E002_SigChange;
 
         }
         private void Panel_E002_SigChange(BasicTriList currentDevice, SigEventArgs args)
@@ -112,28 +110,27 @@ namespace BGHM_Erweiterung
                     {
                         switch (args.Sig.Number)
                         {
-                            case 7: NVXRouter.ChangeRoute(5, 5); break;
-                            case 8: NVXRouter.ChangeRoute(5, 6); break;
-                            case 9: NVXRouter.ChangeRoute(5, 5); NVXRouter.ChangeRoute(5, 6); break;
-                            case 10: NVXRouter.ChangeRoute(6, 5); break;
-                            case 11: NVXRouter.ChangeRoute(6, 6); break;
-                            case 12: NVXRouter.ChangeRoute(6, 5); NVXRouter.ChangeRoute(6, 6); break;
-                            case 13: NVXRouter.ChangeRoute(7, 5); break;
-                            case 14: NVXRouter.ChangeRoute(7, 6); break;
-                            case 15: NVXRouter.ChangeRoute(7, 5); NVXRouter.ChangeRoute(7, 6); break;
+                            case 7: _nvxRouter.ChangeRoute(5, 5); break;
+                            case 8: _nvxRouter.ChangeRoute(5, 6); break;
+                            case 9: _nvxRouter.ChangeRoute(5, 5); _nvxRouter.ChangeRoute(5, 6); break;
+                            case 10: _nvxRouter.ChangeRoute(6, 5); break;
+                            case 11: _nvxRouter.ChangeRoute(6, 6); break;
+                            case 12: _nvxRouter.ChangeRoute(6, 5); _nvxRouter.ChangeRoute(6, 6); break;
+                            case 13: _nvxRouter.ChangeRoute(7, 5); break;
+                            case 14: _nvxRouter.ChangeRoute(7, 6); break;
+                            case 15: _nvxRouter.ChangeRoute(7, 5); _nvxRouter.ChangeRoute(7, 6); break;
                             case 16:
-                                if (args.Sig.BoolValue) { E002_Volume.VolumeUpStart(); }
-                                else { E002_Volume.VolumeUpStop(); }
+                                if (args.Sig.BoolValue) { _e002Volume.VolumeUpStart(); }
+                                else { _e002Volume.VolumeUpStop(); }
                                 break;
-                            case 17: if (args.Sig.BoolValue) E002_Volume.mute(); break;
+                            case 17: if (args.Sig.BoolValue) _e002Volume.Mute(); break;
                             case 18:
-                                if (args.Sig.BoolValue) { E002_Volume.VolumeDownStart(); }
-                                else { E002_Volume.VolumeDownStop(); }
+                                if (args.Sig.BoolValue) { _e002Volume.VolumeDownStart(); }
+                                else { _e002Volume.VolumeDownStop(); }
                                 break;
                             case 20: E002_PowerOff(); break;
                             case 21: E002_PowerOn(); break;
 
-                            default: break;
                         }
                         break;
                     }
@@ -147,19 +144,19 @@ namespace BGHM_Erweiterung
                     {
                         if (args.Sig.Number == 12)
                         {
-                            if (args.Sig.BoolValue) { E026_Volume[8].VolumeUpStart(); }
-                            else { E026_Volume[8].VolumeUpStop(); }
+                            if (args.Sig.BoolValue) { _e026Volume[8].VolumeUpStart(); }
+                            else { _e026Volume[8].VolumeUpStop(); }
                             break;
                         }
                         if (args.Sig.Number == 11)
                         {
-                            if (args.Sig.BoolValue) { E026_Volume[8].mute(); }
+                            if (args.Sig.BoolValue) { _e026Volume[8].Mute(); }
                             break;
                         }
                         if (args.Sig.Number == 10)
                         {
-                            if (args.Sig.BoolValue) { E026_Volume[8].VolumeDownStart(); }
-                            else { E026_Volume[8].VolumeDownStop(); }
+                            if (args.Sig.BoolValue) { _e026Volume[8].VolumeDownStart(); }
+                            else { _e026Volume[8].VolumeDownStop(); }
                             break;
                         }
 
@@ -167,28 +164,28 @@ namespace BGHM_Erweiterung
                         {
                             if (args.Sig.Number == 7) KopplungChanged();
 
-                            if (args.Sig.Number == 8) PageSelection.activate(0);
+                            if (args.Sig.Number == 8) _pageSelection.Activate(0);
 
                             if (args.Sig.Number == 10) E026_PowerOn();
 
                             if (args.Sig.Number > 15 && args.Sig.Number <21)
                             {
-                                NVXRouter.ChangeRoute(args.Sig.Number-16, selected_Receiver);
-                                if (Kopplung)
+                                _nvxRouter.ChangeRoute(args.Sig.Number-16, _selectedReceiver);
+                                if (_kopplung)
                                 {
-                                    if (selected_Receiver == 0)
+                                    if (_selectedReceiver == 0)
                                     {
-                                        NVXRouter.ChangeRoute(args.Sig.Number-16, 5);
+                                        _nvxRouter.ChangeRoute(args.Sig.Number-16, 5);
                                     }
-                                    if (selected_Receiver == 1)
+                                    if (_selectedReceiver == 1)
                                     {
-                                        NVXRouter.ChangeRoute(args.Sig.Number-16, 6);
+                                        _nvxRouter.ChangeRoute(args.Sig.Number-16, 6);
                                     }
                                 }
                             }
                             if (args.Sig.Number == 21)
                             {
-                                NVXRouter.NvxBlack(selected_Receiver);
+                                _nvxRouter.NvxBlack(_selectedReceiver);
                             }
                             if (args.Sig.Number == 22)
                             {
@@ -201,17 +198,17 @@ namespace BGHM_Erweiterung
                             if (args.Sig.Number == 24)
                             {
                                 CrestronConsole.PrintLine("Hallo");
-                                PageSelection.activate(0);
+                                _pageSelection.Activate(0);
                             }
                             if (args.Sig.Number == 25)
                             {
                                 CrestronConsole.PrintLine("Hallo");
-                                PageSelection.activate(1);
+                                _pageSelection.Activate(1);
                             }
                             if (args.Sig.Number == 26)
                             {
                                 CrestronConsole.PrintLine("Hallo");
-                                PageSelection.activate(2);
+                                _pageSelection.Activate(2);
                             }
                             if(args.Sig.Number == 137) E026_PowerOff();
 
@@ -232,54 +229,52 @@ namespace BGHM_Erweiterung
                             
                             case ("Tab Button 1 Press"):
                                 {
-                                    SenkenWahl.activate(0);
-                                    selected_Receiver = 0;
-                                    Panel_E026.StringInput[2].StringValue = ((NvxTransmitter)NVXRouter.getSource(selected_Receiver)).ToString();
-                                    Panel_E026.StringInput[5].StringValue = "Beamer 1 ausgew‰hlt";
+                                    _senkenWahl.Activate(0);
+                                    _selectedReceiver = 0;
+                                    PanelE026.StringInput[2].StringValue = ((NvxTransmitter)_nvxRouter.GetSource(_selectedReceiver)).ToString();
+                                    PanelE026.StringInput[5].StringValue = "Beamer 1 ausgew‰hlt";
                                     break;
                                 }
                             case ("Tab Button 2 Press"):
                                 {
-                                    SenkenWahl.activate(1);
-                                    selected_Receiver = 1;
-                                    Panel_E026.StringInput[2].StringValue = ((NvxTransmitter)NVXRouter.getSource(selected_Receiver)).ToString();
-                                    Panel_E026.StringInput[5].StringValue = "Beamer 2 ausgew‰hlt";
+                                    _senkenWahl.Activate(1);
+                                    _selectedReceiver = 1;
+                                    PanelE026.StringInput[2].StringValue = ((NvxTransmitter)_nvxRouter.GetSource(_selectedReceiver)).ToString();
+                                    PanelE026.StringInput[5].StringValue = "Beamer 2 ausgew‰hlt";
                                     break;
                                 }
                             case ("Tab Button 3 Press"):
                                 {
-                                    SenkenWahl.activate(2);
-                                    selected_Receiver = 2;
-                                    Panel_E026.StringInput[2].StringValue = ((NvxTransmitter)NVXRouter.getSource(selected_Receiver)).ToString();
-                                    Panel_E026.StringInput[5].StringValue = "Display Links ausgew‰hlt";
+                                    _senkenWahl.Activate(2);
+                                    _selectedReceiver = 2;
+                                    PanelE026.StringInput[2].StringValue = ((NvxTransmitter)_nvxRouter.GetSource(_selectedReceiver)).ToString();
+                                    PanelE026.StringInput[5].StringValue = "Display Links ausgew‰hlt";
                                     break;
                                 }
                             case ("Tab Button 4 Press"):
                                 {
-                                    SenkenWahl.activate(3);
-                                    selected_Receiver = 7;
-                                    Panel_E026.StringInput[2].StringValue = ((NvxTransmitter)NVXRouter.getSource(selected_Receiver)).ToString();
-                                    Panel_E026.StringInput[5].StringValue = "Display Mitte ausgew‰hlt";
+                                    _senkenWahl.Activate(3);
+                                    _selectedReceiver = 7;
+                                    PanelE026.StringInput[2].StringValue = ((NvxTransmitter)_nvxRouter.GetSource(_selectedReceiver)).ToString();
+                                    PanelE026.StringInput[5].StringValue = "Display Mitte ausgew‰hlt";
                                     break;
                                 }
                             case ("Tab Button 5 Press"):
                                 {
-                                    SenkenWahl.activate(4);
-                                    selected_Receiver = 3;
-                                    Panel_E026.StringInput[2].StringValue = ((NvxTransmitter)NVXRouter.getSource(selected_Receiver)).ToString();
-                                    Panel_E026.StringInput[5].StringValue = "Display Rechts ausgew‰hlt";
+                                    _senkenWahl.Activate(4);
+                                    _selectedReceiver = 3;
+                                    PanelE026.StringInput[2].StringValue = ((NvxTransmitter)_nvxRouter.GetSource(_selectedReceiver)).ToString();
+                                    PanelE026.StringInput[5].StringValue = "Display Rechts ausgew‰hlt";
                                     break;
                                 }
                             case ("Tab Button 6 Press"):
                                 {
-                                    SenkenWahl.activate(5);
-                                    selected_Receiver = 4;
-                                    Panel_E026.StringInput[2].StringValue = ((NvxTransmitter)NVXRouter.getSource(selected_Receiver)).ToString();
-                                    Panel_E026.StringInput[5].StringValue = "Display Vorne ausgew‰hlt";
+                                    _senkenWahl.Activate(5);
+                                    _selectedReceiver = 4;
+                                    PanelE026.StringInput[2].StringValue = ((NvxTransmitter)_nvxRouter.GetSource(_selectedReceiver)).ToString();
+                                    PanelE026.StringInput[5].StringValue = "Display Vorne ausgew‰hlt";
                                     break;
                                 }
-
-                            default: break;
                         }
                         break;
                     }
@@ -290,24 +285,24 @@ namespace BGHM_Erweiterung
                     {
                         if (args.Sig.Name == "Misc_1")
                         {
-                            AdminAccess.exit();
+                            _adminAccess.Exit();
                         }
                         if (args.Sig.Name == "Misc_2")
                         {
-                            AdminAccess.checkPassword();
+                            _adminAccess.CheckPassword();
                         }
-                        if (args.Sig.BoolValue == true)
+                        if (args.Sig.BoolValue)
                         {
-                            if (args.Sig.Name == "0") AdminAccess.addKeytoInput('0');
-                            if (args.Sig.Name == "1") AdminAccess.addKeytoInput('1');
-                            if (args.Sig.Name == "2") AdminAccess.addKeytoInput('2');
-                            if (args.Sig.Name == "3") AdminAccess.addKeytoInput('3');
-                            if (args.Sig.Name == "4") AdminAccess.addKeytoInput('4');
-                            if (args.Sig.Name == "5") AdminAccess.addKeytoInput('5');
-                            if (args.Sig.Name == "6") AdminAccess.addKeytoInput('6');
-                            if (args.Sig.Name == "7") AdminAccess.addKeytoInput('7');
-                            if (args.Sig.Name == "8") AdminAccess.addKeytoInput('8');
-                            if (args.Sig.Name == "9") AdminAccess.addKeytoInput('9');
+                            if (args.Sig.Name == "0") _adminAccess.AddKeytoInput('0');
+                            if (args.Sig.Name == "1") _adminAccess.AddKeytoInput('1');
+                            if (args.Sig.Name == "2") _adminAccess.AddKeytoInput('2');
+                            if (args.Sig.Name == "3") _adminAccess.AddKeytoInput('3');
+                            if (args.Sig.Name == "4") _adminAccess.AddKeytoInput('4');
+                            if (args.Sig.Name == "5") _adminAccess.AddKeytoInput('5');
+                            if (args.Sig.Name == "6") _adminAccess.AddKeytoInput('6');
+                            if (args.Sig.Name == "7") _adminAccess.AddKeytoInput('7');
+                            if (args.Sig.Name == "8") _adminAccess.AddKeytoInput('8');
+                            if (args.Sig.Name == "9") _adminAccess.AddKeytoInput('9');
                         }
 
                         break;
@@ -326,95 +321,93 @@ namespace BGHM_Erweiterung
                                     switch (args.Sig.Number)
                                     {
                                         case 4011:
-                                            if (args.Sig.BoolValue) { (E026_Volume[0] as QSYS_Volume).VolumeUpStart(); }
-                                            else { (E026_Volume[0] as QSYS_Volume).VolumeUpStop(); }
+                                            if (args.Sig.BoolValue) { (_e026Volume[0] as QsysVolume)?.VolumeUpStart(); }
+                                            else { (_e026Volume[0] as QsysVolume)?.VolumeUpStop(); }
                                             break;
                                         case 4012:
-                                            if (args.Sig.BoolValue) { E026_Volume[0].mute(); }
+                                            if (args.Sig.BoolValue) { _e026Volume[0].Mute(); }
                                             break;
                                         case 4013:
-                                            if (args.Sig.BoolValue) { E026_Volume[0].VolumeDownStart(); }
-                                            else { E026_Volume[0].VolumeDownStop(); }
+                                            if (args.Sig.BoolValue) { _e026Volume[0].VolumeDownStart(); }
+                                            else { _e026Volume[0].VolumeDownStop(); }
                                             break;
 
                                         case 4014:
-                                            if (args.Sig.BoolValue) { E026_Volume[1].VolumeUpStart(); }
-                                            else { E026_Volume[1].VolumeUpStop(); }
+                                            if (args.Sig.BoolValue) { _e026Volume[1].VolumeUpStart(); }
+                                            else { _e026Volume[1].VolumeUpStop(); }
                                             break;
                                         case 4015:
-                                            if (args.Sig.BoolValue) { E026_Volume[1].mute(); }
+                                            if (args.Sig.BoolValue) { _e026Volume[1].Mute(); }
                                             break;
                                         case 4016:
-                                            if (args.Sig.BoolValue) { E026_Volume[1].VolumeDownStart(); }
-                                            else { E026_Volume[1].VolumeDownStop(); }
+                                            if (args.Sig.BoolValue) { _e026Volume[1].VolumeDownStart(); }
+                                            else { _e026Volume[1].VolumeDownStop(); }
                                             break;
 
                                         case 4017:
-                                            if (args.Sig.BoolValue) { E026_Volume[2].VolumeUpStart(); }
-                                            else { E026_Volume[2].VolumeUpStop(); }
+                                            if (args.Sig.BoolValue) { _e026Volume[2].VolumeUpStart(); }
+                                            else { _e026Volume[2].VolumeUpStop(); }
                                             break;
                                         case 4018:
-                                            if (args.Sig.BoolValue) { E026_Volume[2].mute(); }
+                                            if (args.Sig.BoolValue) { _e026Volume[2].Mute(); }
                                             break;
                                         case 4019:
-                                            if (args.Sig.BoolValue) { E026_Volume[2].VolumeDownStart(); }
-                                            else { E026_Volume[2].VolumeDownStop(); }
+                                            if (args.Sig.BoolValue) { _e026Volume[2].VolumeDownStart(); }
+                                            else { _e026Volume[2].VolumeDownStop(); }
                                             break;
 
                                         case 4020:
-                                            if (args.Sig.BoolValue) { E026_Volume[3].VolumeUpStart(); }
-                                            else { E026_Volume[3].VolumeUpStop(); }
+                                            if (args.Sig.BoolValue) { _e026Volume[3].VolumeUpStart(); }
+                                            else { _e026Volume[3].VolumeUpStop(); }
                                             break;
                                         case 4021:
-                                            if (args.Sig.BoolValue) { E026_Volume[3].mute(); }
+                                            if (args.Sig.BoolValue) { _e026Volume[3].Mute(); }
                                             break;
                                         case 4022:
-                                            if (args.Sig.BoolValue) { E026_Volume[3].VolumeDownStart(); }
-                                            else { E026_Volume[3].VolumeDownStop(); }
+                                            if (args.Sig.BoolValue) { _e026Volume[3].VolumeDownStart(); }
+                                            else { _e026Volume[3].VolumeDownStop(); }
                                             break;
 
                                         case 4023:
-                                            if (args.Sig.BoolValue) { E026_Volume[4].VolumeUpStart(); }
-                                            else { E026_Volume[4].VolumeUpStop(); }
+                                            if (args.Sig.BoolValue) { _e026Volume[4].VolumeUpStart(); }
+                                            else { _e026Volume[4].VolumeUpStop(); }
                                             break;
                                         case 4024:
-                                            if (args.Sig.BoolValue) { E026_Volume[4].mute(); }
+                                            if (args.Sig.BoolValue) { _e026Volume[4].Mute(); }
                                             break;
                                         case 4025:
-                                            if (args.Sig.BoolValue) { E026_Volume[4].VolumeDownStart(); }
-                                            else { E026_Volume[4].VolumeDownStop(); }
+                                            if (args.Sig.BoolValue) { _e026Volume[4].VolumeDownStart(); }
+                                            else { _e026Volume[4].VolumeDownStop(); }
                                             break;
 
                                         case 4026:
-                                            if (args.Sig.BoolValue) { E026_Volume[5].VolumeUpStart(); }
-                                            else { E026_Volume[5].VolumeUpStop(); }
+                                            if (args.Sig.BoolValue) { _e026Volume[5].VolumeUpStart(); }
+                                            else { _e026Volume[5].VolumeUpStop(); }
                                             break;
                                         case 4027:
-                                            if (args.Sig.BoolValue) { E026_Volume[5].mute(); }
+                                            if (args.Sig.BoolValue) { _e026Volume[5].Mute(); }
                                             break;
                                         case 4028:
-                                            if (args.Sig.BoolValue) { E026_Volume[5].VolumeDownStart(); }
-                                            else { E026_Volume[5].VolumeDownStop(); }
+                                            if (args.Sig.BoolValue) { _e026Volume[5].VolumeDownStart(); }
+                                            else { _e026Volume[5].VolumeDownStop(); }
                                             break;
 
                                         case 4029:
-                                            if (args.Sig.BoolValue) { E026_Volume[6].VolumeUpStart(); }
-                                            else { E026_Volume[6].VolumeUpStop(); }
+                                            if (args.Sig.BoolValue) { _e026Volume[6].VolumeUpStart(); }
+                                            else { _e026Volume[6].VolumeUpStop(); }
                                             break;
                                         case 4030:
-                                            if (args.Sig.BoolValue) { E026_Volume[6].mute(); }
+                                            if (args.Sig.BoolValue) { _e026Volume[6].Mute(); }
                                             break;
                                         case 4031:
-                                            if (args.Sig.BoolValue) { E026_Volume[6].VolumeDownStart(); }
-                                            else { E026_Volume[6].VolumeDownStop(); }
+                                            if (args.Sig.BoolValue) { _e026Volume[6].VolumeDownStart(); }
+                                            else { _e026Volume[6].VolumeDownStop(); }
                                             break;
 
-                                        default: break;
                                     }
                                     break;
                                     #endregion
                                 }
-                            default: break;
                         }
                         break;
                     }
@@ -423,43 +416,43 @@ namespace BGHM_Erweiterung
         }
         public void E002_PowerOn()
         {
-            selected_Receiver = 5;
+            _selectedReceiver = 5;
             SenkeAn();
-            selected_Receiver = 6;
+            _selectedReceiver = 6;
             SenkeAn();
 
-            NVXRouter.ChangeRoute((uint)NvxTransmitter.E002_ClickShare, (uint)NVXreceiver.E002_Display_Links);
-            NVXRouter.ChangeRoute((uint)NvxTransmitter.E002_ClickShare, (uint)NVXreceiver.E002_Display_rechts);
+            _nvxRouter.ChangeRoute((uint)NvxTransmitter.E002ClickShare, (uint)NvXreceiver.E002DisplayLinks);
+            _nvxRouter.ChangeRoute((uint)NvxTransmitter.E002ClickShare, (uint)NvXreceiver.E002DisplayRechts);
         }
         public void E002_PowerOff()
         {
-            NVXRouter.RS232Send((uint)NVXreceiver.E002_Display_Links, "PowerOn");
-            NVXRouter.RS232Send((uint)NVXreceiver.E002_Display_rechts, "PowerOn");
+            _nvxRouter.Rs232Send((uint)NvXreceiver.E002DisplayLinks, "PowerOn");
+            _nvxRouter.Rs232Send((uint)NvXreceiver.E002DisplayRechts, "PowerOn");
 
-            if (!E002_Volume.getmuted())
+            if (!_e002Volume.Getmuted())
             {
-                E002_Volume.mute();
+                _e002Volume.Mute();
             }
         }
         public void E026_PowerOn()
         {
-            selected_Receiver = 0;
+            _selectedReceiver = 0;
             SenkeAn();
-            selected_Receiver = 1;
+            _selectedReceiver = 1;
             SenkeAn();
 
-            PageSelection.activate(0);
+            _pageSelection.Activate(0);
 
-            foreach (Volume V in E026_Volume)
+            foreach (Volume v in _e026Volume)
             {
-                if (V.getmuted())
+                if (v.Getmuted())
                 {
-                    V.mute();
+                    v.Mute();
                 }
             }
 
-            NVXRouter.ChangeRoute((uint)NvxTransmitter.E026_ClickShare, (uint)NVXreceiver.E026_beamer1);
-            NVXRouter.ChangeRoute((uint)NvxTransmitter.E026_ClickShare, (uint)NVXreceiver.E026_beamer2);
+            _nvxRouter.ChangeRoute((uint)NvxTransmitter.E026ClickShare, (uint)NvXreceiver.E026Beamer1);
+            _nvxRouter.ChangeRoute((uint)NvxTransmitter.E026ClickShare, (uint)NvXreceiver.E026Beamer2);
 
             //Leinwand1.Motors[1].MotorState = e 
             // TODO  add Motor Control auf baustelle da keine idee was die optionen machen
@@ -468,64 +461,64 @@ namespace BGHM_Erweiterung
         {
             for(int i = 0; i < 7; i++)
             {
-                selected_Receiver =(uint)i ;
+                _selectedReceiver =(uint)i ;
                 SenkeAus();
             }
 
-            foreach(Volume V in E026_Volume)
+            foreach(Volume v in _e026Volume)
             {
-                if (!V.getmuted())
+                if (!v.Getmuted())
                 {
-                    V.mute();
+                    v.Mute();
                 }
             }
         }
         public void SenkeAn()
         {
-            if (selected_Receiver > 2)
+            if (_selectedReceiver > 2)
             {
                 //Display
-                NVXRouter.RS232Send(selected_Receiver, "Einschalten"); //TODO change message and add diffrentiation
+                _nvxRouter.Rs232Send(_selectedReceiver, "Einschalten"); //TODO change message and add diffrentiation
             }
             else
             {
                 //Beamer
-                NVXRouter.RS232Send(selected_Receiver, "Einschalten");
+                _nvxRouter.Rs232Send(_selectedReceiver, "Einschalten");
             }
         }
         public void SenkeAus()
         {
-            if (selected_Receiver > 2)
+            if (_selectedReceiver > 2)
             {
                 //Display
-                NVXRouter.RS232Send(selected_Receiver, "Ausschalten"); //TODO change message and add diffrentiation
+                _nvxRouter.Rs232Send(_selectedReceiver, "Ausschalten"); //TODO change message and add diffrentiation
             }
             else
             {
                 //Beamer
-                NVXRouter.RS232Send(selected_Receiver, "Einschalten");
+                _nvxRouter.Rs232Send(_selectedReceiver, "Einschalten");
             }
         }
 
         public void KopplungChanged()
         {
-            if (Kopplung)
+            if (_kopplung)
             {
                 CrestronConsole.PrintLine("deaktiviert");
-                NVXRouter.ChangeRoute(5, 5);
-                NVXRouter.ChangeRoute(5, 6);
-                UserInterfaceHelper.SetDigitalJoin(Panel_E026, 7, false);
-                Panel_E002.BooleanInput[22].BoolValue = false;
-                Kopplung = false;
+                _nvxRouter.ChangeRoute(5, 5);
+                _nvxRouter.ChangeRoute(5, 6);
+                UserInterfaceHelper.SetDigitalJoin(PanelE026, 7, false);
+                PanelE002.BooleanInput[22].BoolValue = false;
+                _kopplung = false;
             }
             else
             {
                 CrestronConsole.PrintLine("aktiviert");
-                NVXRouter.ChangeRoute(NVXRouter.getSource(0), 5);
-                NVXRouter.ChangeRoute(NVXRouter.getSource(1), 6);
-                Panel_E002.BooleanInput[22].BoolValue = true;
-                UserInterfaceHelper.SetDigitalJoin(Panel_E026, 7, true);
-                Kopplung=true;
+                _nvxRouter.ChangeRoute(_nvxRouter.GetSource(0), 5);
+                _nvxRouter.ChangeRoute(_nvxRouter.GetSource(1), 6);
+                PanelE002.BooleanInput[22].BoolValue = true;
+                UserInterfaceHelper.SetDigitalJoin(PanelE026, 7, true);
+                _kopplung=true;
             }
         }
 
@@ -538,26 +531,26 @@ namespace BGHM_Erweiterung
 
         public enum NvxTransmitter
         {
-            E026_ClickShare = 0,
-            E026_Bodentank1 = 1,
-            E026_Bodentank2 = 2,
-            E026_Bodentank3 = 3,
-            E026_Kamera = 4,
-            E002_ClickShare = 5,
-            E002_Bodentank1 = 6,
-            E002_Bodentank2 = 7
+            E026ClickShare = 0,
+            E026Bodentank1 = 1,
+            E026Bodentank2 = 2,
+            E026Bodentank3 = 3,
+            E026Kamera = 4,
+            E002ClickShare = 5,
+            E002Bodentank1 = 6,
+            E002Bodentank2 = 7
         }
 
-        public enum NVXreceiver
+        public enum NvXreceiver
         {
-            E026_beamer1 = 0,
-            E026_beamer2 = 1,
-            E026_Display_Links = 2,
-            E026_Display_rechts = 3,
-            E026_Display_vorne = 4,
-            E002_Display_Links = 5,
-            E002_Display_rechts = 6,
-            E026_Display_Mitte = 7
+            E026Beamer1 = 0,
+            E026Beamer2 = 1,
+            E026DisplayLinks = 2,
+            E026DisplayRechts = 3,
+            E026DisplayVorne = 4,
+            E002DisplayLinks = 5,
+            E002DisplayRechts = 6,
+            E026DisplayMitte = 7
         }
 
         public override void InitializeSystem()
@@ -565,35 +558,31 @@ namespace BGHM_Erweiterung
             try
             {
                 InitializePanel();
-
                 Helpers.PrintInfo();
-                NVXRouter = new NVXRouting(this);
-                CrestronConsole.PrintLine("Here");
-                Kopplung = false;
-                double VolumeIncrement = 0.0045;
-                CrestronConsole.PrintLine("Here");
-                DSP = new QSYS("192.168.254.238", 1710, "NewUser", "1000");
-                CrestronConsole.PrintLine("Here");
-                DSP.LOGON();
+                _nvxRouter = new NvxRouting(this);
+                _kopplung = false;
+                double volumeIncrement = 0.0045;
+                _dsp = new Qsys("192.168.254.238", 1710, "NewUser", "1000");
+                _dsp.Logon();
 
                 CrestronConsole.PrintLine("Here");
 
-                E002_Volume = new QSYS_Volume(Panel_E002.UShortInput[2], Panel_E002.UShortInput[3], Panel_E002.StringInput[3], "Gesamt Lautst‰rke", 0, VolumeIncrement, "gain0", DSP);
+                _e002Volume = new QsysVolume(PanelE002.UShortInput[2], PanelE002.UShortInput[3], PanelE002.StringInput[3], "Gesamt Lautst‰rke", 0, volumeIncrement, "gain0", _dsp);
 
                 CrestronConsole.PrintLine("Here");
 
-                E026_Volume = new Volume[9];
+                _e026Volume = new Volume[9];
 
                 CrestronConsole.PrintLine("Here");
                 
-                NVXRouter.Init();
+                _nvxRouter.Init();
 
                 CrestronConsole.PrintLine("Here");
 
                 InitPageSelection();
 
                 CrestronConsole.PrintLine("Here");
-                SenkenWahl = new Interlock();
+                _senkenWahl = new Interlock();
 
 
                 /*
@@ -606,25 +595,25 @@ namespace BGHM_Erweiterung
                 */
 
 
-                AdminAccess = new Passwort("4690", PageSelection, 3, Panel_E026.StringInput[4]);
+                _adminAccess = new Passwort("4690", _pageSelection, 3, PanelE026.StringInput[4]);
 
-                var SmartObject = Panel_E026.SmartObjects[(int)PanelSmartObjectIDs.SubpageReferenceList];
+                var smartObject = PanelE026.SmartObjects[(int)PanelSmartObjectIDs.SubpageReferenceList];
 
 
-                E026_Volume[0] = new QSYS_Volume(SmartObject.UShortInput[11], SmartObject.UShortInput[12], SmartObject.StringInput[11], "Mikrofon 1", 2, VolumeIncrement, "gain1", DSP);
-                E026_Volume[1] = new QSYS_Volume(SmartObject.UShortInput[13], SmartObject.UShortInput[14], SmartObject.StringInput[12], "Mikrofon 2", 2, VolumeIncrement, "gain2", DSP);
-                E026_Volume[2] = new QSYS_Volume(SmartObject.UShortInput[15], SmartObject.UShortInput[16], SmartObject.StringInput[13], "Mikrofon 3", 2, VolumeIncrement, "gain3", DSP);
-                E026_Volume[3] = new QSYS_Volume(SmartObject.UShortInput[17], SmartObject.UShortInput[18], SmartObject.StringInput[14], "Rednerpult", 2, VolumeIncrement, "gain4", DSP);
-                E026_Volume[4] = new QSYS_Volume(SmartObject.UShortInput[19], SmartObject.UShortInput[20], SmartObject.StringInput[15], "Medienton Linker Beamer", 2, VolumeIncrement, "gain5", DSP);
-                E026_Volume[5] = new QSYS_Volume(SmartObject.UShortInput[21], SmartObject.UShortInput[22], SmartObject.StringInput[16], "Medienton Rechter Beamer", 2, VolumeIncrement, "gain6", DSP);
-                E026_Volume[6] = new QSYS_Volume(SmartObject.UShortInput[23], SmartObject.UShortInput[24], SmartObject.StringInput[17], "Mobile Connect", 2, VolumeIncrement, "gain7", DSP);
-                E026_Volume[7] = new QSYS_Volume(SmartObject.UShortInput[25], SmartObject.UShortInput[26], SmartObject.StringInput[18], "Konferenzanlage", 2, VolumeIncrement, "gain8", DSP);
-                E026_Volume[8] = new QSYS_Volume(Panel_E026.UShortInput[2], Panel_E026.UShortInput[3], Panel_E026.StringInput[3], "Gesamt Lautst‰rke", 0, VolumeIncrement, "gain9", DSP);
+                _e026Volume[0] = new QsysVolume(smartObject.UShortInput[11], smartObject.UShortInput[12], smartObject.StringInput[11], "Mikrofon 1", 2, volumeIncrement, "gain1", _dsp);
+                _e026Volume[1] = new QsysVolume(smartObject.UShortInput[13], smartObject.UShortInput[14], smartObject.StringInput[12], "Mikrofon 2", 2, volumeIncrement, "gain2", _dsp);
+                _e026Volume[2] = new QsysVolume(smartObject.UShortInput[15], smartObject.UShortInput[16], smartObject.StringInput[13], "Mikrofon 3", 2, volumeIncrement, "gain3", _dsp);
+                _e026Volume[3] = new QsysVolume(smartObject.UShortInput[17], smartObject.UShortInput[18], smartObject.StringInput[14], "Rednerpult", 2, volumeIncrement, "gain4", _dsp);
+                _e026Volume[4] = new QsysVolume(smartObject.UShortInput[19], smartObject.UShortInput[20], smartObject.StringInput[15], "Medienton Linker Beamer", 2, volumeIncrement, "gain5", _dsp);
+                _e026Volume[5] = new QsysVolume(smartObject.UShortInput[21], smartObject.UShortInput[22], smartObject.StringInput[16], "Medienton Rechter Beamer", 2, volumeIncrement, "gain6", _dsp);
+                _e026Volume[6] = new QsysVolume(smartObject.UShortInput[23], smartObject.UShortInput[24], smartObject.StringInput[17], "Mobile Connect", 2, volumeIncrement, "gain7", _dsp);
+                _e026Volume[7] = new QsysVolume(smartObject.UShortInput[25], smartObject.UShortInput[26], smartObject.StringInput[18], "Konferenzanlage", 2, volumeIncrement, "gain8", _dsp);
+                _e026Volume[8] = new QsysVolume(PanelE026.UShortInput[2], PanelE026.UShortInput[3], PanelE026.StringInput[3], "Gesamt Lautst‰rke", 0, volumeIncrement, "gain9", _dsp);
 
-                for (int i = 0; i < E026_Volume.Length-1; i++)
+                for (int i = 0; i < _e026Volume.Length-1; i++)
                 {
-                    SmartGraphicsHelper.SetSmartObjectVisible(Panel_E026.SmartObjects[1], i+1, true);
-                    SmartGraphicsHelper.SetSmartObjectEnable(Panel_E026.SmartObjects[1], i+1, true);
+                    SmartGraphicsHelper.SetSmartObjectVisible(PanelE026.SmartObjects[1], i+1, true);
+                    SmartGraphicsHelper.SetSmartObjectEnable(PanelE026.SmartObjects[1], i+1, true);
                 }
 
 
@@ -638,17 +627,17 @@ namespace BGHM_Erweiterung
 
         private void InitPageSelection()
         {
-            PageSelection = new Interlock();
-            PageSelection.addGroup();
-            PageSelection.AddJoin(Panel_E026.BooleanInput[24], 0);
-            PageSelection.AddJoin(Panel_E026.BooleanInput[30], 0);
-            PageSelection.addGroup();
-            PageSelection.AddJoin(Panel_E026.BooleanInput[25], 1);
-            PageSelection.AddJoin(Panel_E026.BooleanInput[30], 1);
-            PageSelection.addGroup();
-            PageSelection.AddJoin(Panel_E026.BooleanInput[26], 2);
-            PageSelection.addGroup();
-            PageSelection.AddJoin(Panel_E026.BooleanInput[28], 3);
+            _pageSelection = new Interlock();
+            _pageSelection.AddGroup();
+            _pageSelection.AddJoin(PanelE026.BooleanInput[24], 0);
+            _pageSelection.AddJoin(PanelE026.BooleanInput[30], 0);
+            _pageSelection.AddGroup();
+            _pageSelection.AddJoin(PanelE026.BooleanInput[25], 1);
+            _pageSelection.AddJoin(PanelE026.BooleanInput[30], 1);
+            _pageSelection.AddGroup();
+            _pageSelection.AddJoin(PanelE026.BooleanInput[26], 2);
+            _pageSelection.AddGroup();
+            _pageSelection.AddJoin(PanelE026.BooleanInput[28], 3);
         }
 
 

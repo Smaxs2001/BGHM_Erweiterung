@@ -11,14 +11,14 @@ using static BGHM_Erweiterung.ControlSystem;
 
 namespace BFE
 {
-    class NVXRouting
+    class NvxRouting
     {
-        private DmNvxBaseClass[] DmNvxTransmitter;
-        private DmNvxBaseClass[] DmNvxReceiver;
-        private ControlSystem ControlSystem;
-        private ComPort.ComPortSpec standard;
-        private uint[] routes;
-        public NVXRouting(ControlSystem paramControlSystem) {
+        private DmNvxBaseClass[] _dmNvxTransmitter;
+        private DmNvxBaseClass[] _dmNvxReceiver;
+        private ControlSystem _controlSystem;
+        private ComPort.ComPortSpec _standard;
+        private uint[] _routes;
+        public NvxRouting(ControlSystem paramControlSystem) {
 
 
 
@@ -26,31 +26,31 @@ namespace BFE
             // receiver E026_beamer1,E026_beamer2,E026_Display_Links,E026_Display_rechts,E026_Display_vorne,E002_Display_Links,E002_Display_rechts,E026-Display_Mitte
 
 
-            ControlSystem = paramControlSystem;
-            DmNvxTransmitter = new DmNvxBaseClass[8];
-            DmNvxReceiver = new DmNvxBaseClass[8];
+            _controlSystem = paramControlSystem;
+            _dmNvxTransmitter = new DmNvxBaseClass[8];
+            _dmNvxReceiver = new DmNvxBaseClass[8];
 
-            standard.BaudRate = ComPort.eComBaudRates.ComspecBaudRate9600;
-            standard.Protocol = ComPort.eComProtocolType.ComspecProtocolRS232;
-            standard.Parity = ComPort.eComParityType.ComspecParityNone;
-            standard.DataBits = ComPort.eComDataBits.ComspecDataBits8;
-            standard.StopBits = ComPort.eComStopBits.ComspecStopBits1;
+            _standard.BaudRate = ComPort.eComBaudRates.ComspecBaudRate9600;
+            _standard.Protocol = ComPort.eComProtocolType.ComspecProtocolRS232;
+            _standard.Parity = ComPort.eComParityType.ComspecParityNone;
+            _standard.DataBits = ComPort.eComDataBits.ComspecDataBits8;
+            _standard.StopBits = ComPort.eComStopBits.ComspecStopBits1;
 
-            routes = new uint[8];
+            _routes = new uint[8];
 
             for (int i = 0; i < 8; i++)
             {
-                DmNvxTransmitter[i] = new DmNvxE30((uint)i+5, ControlSystem);
-                DmNvxTransmitter[i].OnlineStatusChange += new OnlineStatusChangeEventHandler(NvxOnlineStatusChange);
+                _dmNvxTransmitter[i] = new DmNvxE30((uint)i+5, _controlSystem);
+                _dmNvxTransmitter[i].OnlineStatusChange += new OnlineStatusChangeEventHandler(NvxOnlineStatusChange);
             }
             for (int i = 0; i < 7; i++)
             {
-                DmNvxReceiver[i] = new DmNvx360((uint)i+14, ControlSystem);
+                _dmNvxReceiver[i] = new DmNvx360((uint)i+14, _controlSystem);
             }
-            DmNvxReceiver[7] = new DmNvxD30(21, ControlSystem);
+            _dmNvxReceiver[7] = new DmNvxD30(21, _controlSystem);
 
 
-            foreach (DmNvxBaseClass nvxdevice in DmNvxReceiver)
+            foreach (DmNvxBaseClass nvxdevice in _dmNvxReceiver)
             {
 
                 if (nvxdevice.Register() != eDeviceRegistrationUnRegistrationResponse.Success)
@@ -62,7 +62,7 @@ namespace BFE
                     
                 
             }
-            foreach (DmNvxBaseClass nvxdevice in DmNvxTransmitter)
+            foreach (DmNvxBaseClass nvxdevice in _dmNvxTransmitter)
             {
                
                 if (nvxdevice.Register() != eDeviceRegistrationUnRegistrationResponse.Success)
@@ -75,14 +75,14 @@ namespace BFE
 
         public void Init()
         {
-            foreach (DmNvxBaseClass nvxdevice in DmNvxReceiver)
+            foreach (DmNvxBaseClass nvxdevice in _dmNvxReceiver)
             {
                 {
                     if (nvxdevice.NumberOfComPorts > 0)
                     {
                         foreach(ComPort x in nvxdevice.ComPorts)
                         {
-                            x.SetComPortSpec(standard);
+                            x.SetComPortSpec(_standard);
                         }
                     }
                 }
@@ -92,29 +92,29 @@ namespace BFE
         //only change route if route differs from lst value
         public void ChangeRoute(uint source,uint destination)
         {
-            if (source >= DmNvxTransmitter.Length) return;
-            if (destination >= DmNvxReceiver.Length) return;
-            if (!DmNvxTransmitter[source].IsOnline) return;
-            if (!DmNvxReceiver[destination].IsOnline) return;
-            if (DmNvxReceiver[destination].Control.ServerUrlFeedback.StringValue == DmNvxTransmitter[source].Control.ServerUrlFeedback.StringValue) return;
+            if (source >= _dmNvxTransmitter.Length) return;
+            if (destination >= _dmNvxReceiver.Length) return;
+            if (!_dmNvxTransmitter[source].IsOnline) return;
+            if (!_dmNvxReceiver[destination].IsOnline) return;
+            if (_dmNvxReceiver[destination].Control.ServerUrlFeedback.StringValue == _dmNvxTransmitter[source].Control.ServerUrlFeedback.StringValue) return;
 
-            if (DmNvxReceiver[destination].HdmiOut.BlankEnabledFeedback.BoolValue) DmNvxReceiver[destination].HdmiOut.BlankDisabled();
-            DmNvxReceiver[destination].Control.ServerUrl.StringValue = DmNvxTransmitter[source].Control.ServerUrlFeedback.StringValue;
-            routes[destination]=source;
-            ControlSystem.Panel_E026.StringInput[2].StringValue = ((NvxTransmitter)getSource(destination)).ToString();
+            if (_dmNvxReceiver[destination].HdmiOut.BlankEnabledFeedback.BoolValue) _dmNvxReceiver[destination].HdmiOut.BlankDisabled();
+            _dmNvxReceiver[destination].Control.ServerUrl.StringValue = _dmNvxTransmitter[source].Control.ServerUrlFeedback.StringValue;
+            _routes[destination]=source;
+            _controlSystem.PanelE026.StringInput[2].StringValue = ((NvxTransmitter)GetSource(destination)).ToString();
         }
 
         void NvxOnlineStatusChange(GenericBase device, OnlineOfflineEventArgs args)
         {
             if(device.ID > 4 && device.ID < 14 && device.IsOnline)
             {
-                DmNvxTransmitter[device.ID-5].Control.EnableAutomaticInitiation();
-                DmNvxTransmitter[device.ID-5].Control.EnableAutomaticInputRouting();
+                _dmNvxTransmitter[device.ID-5].Control.EnableAutomaticInitiation();
+                _dmNvxTransmitter[device.ID-5].Control.EnableAutomaticInputRouting();
             }else
             {
                 if(device.ID > 13 && device.ID < 22 && device.IsOnline)
                 {
-                    DmNvxReceiver[device.ID-14].Control.EnableAutomaticInitiation();
+                    _dmNvxReceiver[device.ID-14].Control.EnableAutomaticInitiation();
                 }
             }
 
@@ -122,18 +122,18 @@ namespace BFE
 
         public void NvxBlack(uint destination)
         {
-            DmNvxReceiver[destination].HdmiOut.BlankEnabled();
-            ControlSystem.Panel_E026.StringInput[2].StringValue = "Schwarzbild";
+            _dmNvxReceiver[destination].HdmiOut.BlankEnabled();
+            _controlSystem.PanelE026.StringInput[2].StringValue = "Schwarzbild";
         }
 
-        public void RS232Send(uint destination, string Message)
+        public void Rs232Send(uint destination, string message)
         {
-            DmNvxReceiver[destination].ComPorts[0].Send(Message);
+            _dmNvxReceiver[destination].ComPorts[0].Send(message);
         }
 
-        public uint getSource(uint dest)
+        public uint GetSource(uint dest)
         {
-            return routes[dest];
+            return _routes[dest];
         }
 
     }

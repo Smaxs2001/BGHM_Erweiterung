@@ -3,17 +3,15 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace BFE.QSYS
 {
     static class Rpc
     {
 
-        public static int id = 100;
+        private static int _id = 100;
 
         public static JObject ReadResponseObject(NetworkStream stream)
         {
@@ -34,7 +32,7 @@ namespace BFE.QSYS
             }
             catch (ArgumentException ex)
             {
-                //Console.WriteLine("  parse error : {0}\r\n", ex.Message);
+                Console.WriteLine("  parse error : {0}\r\n", ex.Message);
                 return null;
             }
             catch (Exception)
@@ -57,13 +55,13 @@ namespace BFE.QSYS
                     bytes.Add(b);
                 }
                 string resp = Encoding.UTF8.GetString(bytes.ToArray());
-                //Console.WriteLine("FROM CORE : {0}", resp);
+                Console.WriteLine("FROM CORE : {0}", resp);
                 JsonConvert.DeserializeObject(resp);
                 return true;
             }
             catch (ArgumentException ex)
             {
-                //Console.WriteLine("  parse error : {0}\r\n", ex.Message);
+                Console.WriteLine("  parse error : {0}\r\n", ex.Message);
                 return true;
             }
             catch (Exception)
@@ -79,9 +77,9 @@ namespace BFE.QSYS
             var rpc = new
             {
                 jsonrpc = "2.0",
-                method = method,
+                method,
                 @params = data,
-                id = id++
+                id = _id++
             };
             string str = JsonConvert.SerializeObject(rpc);
             CrestronConsole.PrintLine("TO CORE : {0}", str);
@@ -99,9 +97,9 @@ namespace BFE.QSYS
             var rpc = new
             {
                 jsonrpc = "2.0",
-                method = method,
-                @params = data.@params,
-                id = id++
+                method,
+                @params = data.Params,
+                id = _id++
             };
             string str = JsonConvert.SerializeObject(rpc);
             //Console.WriteLine("TO CORE : {0}", str);
@@ -114,7 +112,7 @@ namespace BFE.QSYS
 
         }
 
-        public static void Send(NetworkStream stream, IRPCCommand command)
+        public static void Send(NetworkStream stream, IRpcCommand command)
         {
             if (command.Method == "Control.Get")
             {

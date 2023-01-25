@@ -9,14 +9,14 @@ using System.Threading.Tasks;
 
 namespace BFE.QSYS
 {
-    internal class QSYS_Volume : Volume
+    internal class QsysVolume : Volume
     {
-        private QSYS DSP;
-        public string namedControl;
-        public QSYS_Volume(UShortInputSig volumeGaugeJoin, UShortInputSig symbolJoin, StringInputSig volumeNameJoin, string volumeName, ushort volumeType, double increment, string namedControl, QSYS DSP) : base(volumeGaugeJoin, symbolJoin, volumeNameJoin, volumeName, volumeType, increment)
+        private Qsys _dsp;
+        public string NamedControl;
+        public QsysVolume(UShortInputSig volumeGaugeJoin, UShortInputSig symbolJoin, StringInputSig volumeNameJoin, string volumeName, ushort volumeType, double increment, string namedControl, Qsys dsp) : base(volumeGaugeJoin, symbolJoin, volumeNameJoin, volumeName, volumeType, increment)
         {
-            this.namedControl = namedControl;
-            this.DSP = DSP;
+            this.NamedControl = namedControl;
+            this._dsp = dsp;
 
             this.MinLevel = 0;
             this.MaxLevel = 1;
@@ -26,25 +26,25 @@ namespace BFE.QSYS
         {
             CrestronConsole.PrintLine("UpdateVolume ausgeführt");
             VolumeGaugeJoin.UShortValue=(ushort)(VolumeLevel*65535);
-            DSP.SetPosition(namedControl, VolumeLevel);
+            _dsp.SetPosition(NamedControl, VolumeLevel);
 
 
         }
 
-        override public void mute()
+        override public void Mute()
         {
-            if (muted)
+            if (Muted)
             {
-                DSP.SetValue(namedControl+"mute",false);
+                _dsp.SetValue(NamedControl+"mute",false);
                 SymbolJoin.UShortValue = (ushort)VolumeType;
             }
             else
             {
-                DSP.SetValue(namedControl+"mute", true);
+                _dsp.SetValue(NamedControl+"mute", true);
                 SymbolJoin.UShortValue = (ushort)(VolumeType+1);
             }
 
-            muted = !muted;
+            Muted = !Muted;
         }
 
         public void PowerOn()

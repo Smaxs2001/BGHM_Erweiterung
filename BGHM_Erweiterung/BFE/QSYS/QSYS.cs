@@ -7,133 +7,150 @@ using Crestron.SimplSharp;
 
 namespace BFE.QSYS
 {
-    class QSYS
+    class Qsys
     {
-        string IP;
-        int Port;
+        string _ip;
+        int _port;
 
-        string Username;
-        string Password;
+        string _username;
+        string _password;
+        private bool status;
+        private TcpClient tcp;
+        Logon _logonObject = new Logon();
 
-        LOGON LogonObject = new LOGON();
 
+        NetworkStream _tcpStream = null;
 
-        NetworkStream _tcp_Stream = null;
-
-        Timer keepAliveTimer;
-        public QSYS(string ip, int port, string username, string password)
+        Timer _keepAliveTimer;
+        public Qsys(string ip, int port, string username, string password)
         {
-            IP=ip;
-            Port=port;
-            Username=username;
-            Password=password;
+            _ip=ip;
+            _port=port;
+            _username=username;
+            _password=password;
 
-            LogonObject.Username = Username;
-            LogonObject.Password = Password;
+            _logonObject.Username = _username;
+            _logonObject.Password = _password;
 
-            TcpClient tcp = new TcpClient(ip, port);
+            tcp = new TcpClient(ip, port);
 
-            _tcp_Stream = tcp.GetStream();
+            _tcpStream = tcp.GetStream();
 
 
 
-            keepAliveTimer = new System.Timers.Timer();
-            keepAliveTimer.Interval = 19000;
-            keepAliveTimer.AutoReset = true;
-            keepAliveTimer.Elapsed += keepAlive;
+            _keepAliveTimer = new System.Timers.Timer();
+            _keepAliveTimer.Interval = 19000;
+            _keepAliveTimer.AutoReset = true;
+            _keepAliveTimer.Elapsed += KeepAlive;
 
-            keepAliveTimer.Start();
+            _keepAliveTimer.Start();
 
 
         }
 
-        private void keepAlive(object Sender, ElapsedEventArgs args)
+        private void KeepAlive(object sender, ElapsedEventArgs args)
         {
 
-            NoOp C = new NoOp();
-            IRPCResponse response = Send(C);
+            NoOp c = new NoOp();
+            //IRpcResponse response = 
+                Send(c);
 
         }
 
-        public IRPCResponse LOGON()
+        public void Logon()
         {
-            var response = Send(LogonObject);
 
+            //IRpcResponse response = 
+                Send(_logonObject);
+            
+            Rpc.ReadResponseObject(_tcpStream);
+            
             //ReadResponseIRCP(_tcp_Stream);
-
-            return null;
-
         }
 
-        public IRPCResponse Get(string namedControl) //TODO change return Type
+        public IRpcResponse Get(string namedControl) //TODO change return Type
         {
 
-            ControlGet C = new ControlGet();
+            ControlGet c = new ControlGet();
 
-            C.addString(namedControl);
-            return Send(C);
+            c.AddString(namedControl);
+            return Send(c);
+                
         }
 
-        public IRPCResponse SetValue(string namedControl, double Value) //TODO change return Type
+        public IRpcResponse SetValue(string namedControl, double value) //TODO change return Type
         {
 
-            ControlSetDoubleValue C = new ControlSetDoubleValue
+            ControlSetDoubleValue c = new ControlSetDoubleValue
             {
                 Name = namedControl,
-                Value = Value
+                Value = value
             };
-            return Send(C);
+            return Send(c);
         }
 
-        public IRPCResponse SetValue(string namedControl, bool Value) //TODO change return Type
+        public IRpcResponse SetValue(string namedControl, bool value) //TODO change return Type
         {
 
-            ControlSetBoolValue C = new ControlSetBoolValue
+            ControlSetBoolValue c = new ControlSetBoolValue
             {
                 Name = namedControl,
-                Value = Value
+                Value = value
             };
-            return Send(C);
+            return Send(c);
         }
 
-        public IRPCResponse SetPosition(string namedControl, double Pos) //TODO change return Type
+        public IRpcResponse SetPosition(string namedControl, double pos) //TODO change return Type
         {
 
-            ControlSetPosition C = new ControlSetPosition();
+            ControlSetPosition c = new ControlSetPosition();
 
-            C.Name = namedControl;
-            C.Position = Pos;
-            return Send(C);
-        }
-
-
-        public IRPCResponse Send(IRPCCommand C)
-        {
-
-
-            Rpc.Send(_tcp_Stream, C);
-
-            return ReadResponseIRCP(_tcp_Stream);
+            c.Name = namedControl;
+            c.Position = pos;
+            return Send(c);
         }
 
 
-        private IRPCResponse ReadResponseIRCP(NetworkStream stream)
+        public IRpcResponse Send(IRpcCommand c)
         {
-
-            JObject obj = Rpc.ReadResponseObject(stream);
-
-            if (obj.GetValue("result").Type == JTokenType.Boolean)
-            {
-                ResponseGetBool C = new ResponseGetBool();
-                C.NamedControl = (string)obj.GetValue("Name");
-                C.Value = (bool)obj.GetValue("Value");
+            status = tcp.Connected;
+            
+            if (status)
+            {   
+                Rpc.Send(_tcpStream, c);
             }
+            
 
-            if(obj.GetValue("result").Type == JTokenType.Array)
+            return ReadResponseIrcp(_tcpStream);
+        }
+
+
+        private IRpcResponse ReadResponseIrcp(NetworkStream stream)
+        {
+            try
             {
-                CrestronConsole.PrintLine("Hello");
-            }
+                JObject obj = Rpc.ReadResponseObject(stream);
+                if (obj.GetValue("result").Type == JTokenType.Boolean)
+                {
+                    ResponseGetBool c = new ResponseGetBool();
+                    c.NamedControl = (string)obj.GetValue("Name");
+                    c.Value = (bool)obj.GetValue("Value");
+                    
+                    CrestronConsole.PrintLine("ID: {0}",obj.GetValue("id"));
+                }
 
+                if(obj.GetValue("result").Type == JTokenType.Array)
+                {
+                    CrestronConsole.PrintLine("Hello");
+                }
+            }
+            catch (Exception e)
+            {
+                ErrorLog.Error(e.ToString());
+                throw;
+            }
+            
+            CrestronConsole.PrintLine("lOgoN 4" );
 
             return new ResponseGetBool();
         }
@@ -143,25 +160,25 @@ namespace BFE.QSYS
 
 
 
-    public interface IRPCCommand
+    public interface IRpcCommand
     {
         string Method { get; }
     }
 
-    public interface IRPCResponse
+    public interface IRpcResponse
     {
 
     }
 
-    class ResponseGetDouble : IRPCResponse
+    class ResponseGetDouble : IRpcResponse
     {
-        public string namedControl { get; set; }
+        public string NamedControl { get; set; }
         public double Value { get; set; }
         public string @String { get; set; }
         public double Position { get; set; }
     }
 
-    class ResponseGetBool : IRPCResponse
+    class ResponseGetBool : IRpcResponse
     {
         public string NamedControl { get; set; }
         public bool Value { get; set; }
@@ -171,7 +188,7 @@ namespace BFE.QSYS
     // RPC COMMANDS
     // ####################
 
-    class ControlSetDoubleValue : IRPCCommand
+    class ControlSetDoubleValue : IRpcCommand
     {
         public string Method
         {
@@ -189,7 +206,7 @@ namespace BFE.QSYS
 
     }
 
-    class ControlSetBoolValue : IRPCCommand
+    class ControlSetBoolValue : IRpcCommand
     {
         public string Method
         {
@@ -207,7 +224,7 @@ namespace BFE.QSYS
 
     }
 
-    class ControlSetPosition : IRPCCommand
+    class ControlSetPosition : IRpcCommand
     {
         public string Method
         {
@@ -223,7 +240,7 @@ namespace BFE.QSYS
 
     }
 
-    class ControlGet : IRPCCommand
+    class ControlGet : IRpcCommand
     {
         public string Method
         {
@@ -233,21 +250,21 @@ namespace BFE.QSYS
             }
         }
 
-        public string[] @params { get; set; }
+        public string[] Params { get; set; }
 
         public ControlGet()
         {
-            @params = new string[1];
+            Params = new string[1];
         }
 
-        public void addString(string x)
+        public void AddString(string x)
         {
-            @params[0] = x;
+            Params[0] = x;
         }
 
     }
 
-    class LOGON : IRPCCommand
+    class Logon : IRpcCommand
     {
         public string Method
         {
@@ -265,7 +282,7 @@ namespace BFE.QSYS
     /// <summary>
     /// Send Command to tell core to send status changes back
     /// </summary>
-    class WatchEnable : IRPCCommand
+    class WatchEnable : IRpcCommand
     {
         public string Method
         {
@@ -286,7 +303,7 @@ namespace BFE.QSYS
     /// <summary>
     /// Send Command to queue a new page
     /// </summary>
-    class PageSubmit : IRPCCommand
+    class PageSubmit : IRpcCommand
     {
         public string Mode { get; set; }
         public string Originator { get; set; }
@@ -317,7 +334,7 @@ namespace BFE.QSYS
     /// <summary>
     /// Send Command to ping the core
     /// </summary>
-    class NoOp : IRPCCommand
+    class NoOp : IRpcCommand
     {
         public string Method
         {
@@ -334,7 +351,7 @@ namespace BFE.QSYS
 
     }
 
-    class ChangeGroupAddControl : IRPCCommand
+    class ChangeGroupAddControl : IRpcCommand
     {
 
         public string Method
@@ -353,7 +370,7 @@ namespace BFE.QSYS
     }
 
 
-    class ChangeGroupAutoPoll : IRPCCommand
+    class ChangeGroupAutoPoll : IRpcCommand
     {
         public string Method
         {
@@ -373,7 +390,7 @@ namespace BFE.QSYS
     // RPC RESPONSES
     // ####################
 
-    public class ZoneStatus : IRPCResponse
+    public class ZoneStatus : IRpcResponse
     {
         public ZoneStatus(JObject o)
         {
@@ -392,15 +409,15 @@ namespace BFE.QSYS
         }
     }
 
-    public class QSYS_Response : IRPCResponse
+    public class QsysResponse : IRpcResponse
     {
         public string Name { get; }
         public string @String { get; }
 
-        public QSYS_Response(JObject Response)
+        public QsysResponse(JObject response)
         {
-            if (Response.ContainsKey("Name")) { Name = Response.GetValue("params").Value<String>("Name"); }
-            if (Response.ContainsKey("String")) { @String = Response.GetValue("params").Value<String>("String"); }
+            if (response.ContainsKey("Name")) { Name = response.GetValue("params").Value<String>("Name"); }
+            if (response.ContainsKey("String")) { @String = response.GetValue("params").Value<String>("String"); }
 
             Console.WriteLine(Name);
             Console.WriteLine(String);
@@ -410,15 +427,15 @@ namespace BFE.QSYS
 
     }
 
-    public class QSYS_Gain_response : QSYS_Response
+    public class QsysGainResponse : QsysResponse
     {
         public double Value { get; }
         public double Pos { get; }
-        public QSYS_Gain_response(JObject Response) : base(Response)
+        public QsysGainResponse(JObject response) : base(response)
         {
 
-            if (Response.ContainsKey("Value")) { Value = (double)Response.GetValue("params").Value<double>("Value"); }
-            if (Response.ContainsKey("Position")) { Pos = (double)Response.GetValue("params").Value<double>("Position"); }
+            if (response.ContainsKey("Value")) { Value = (double)response.GetValue("params").Value<double>("Value"); }
+            if (response.ContainsKey("Position")) { Pos = (double)response.GetValue("params").Value<double>("Position"); }
             Console.WriteLine(Value);
             Console.WriteLine(Pos);
 

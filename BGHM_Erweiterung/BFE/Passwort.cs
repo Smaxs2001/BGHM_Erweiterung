@@ -9,53 +9,53 @@ namespace BFE
 {
     class Passwort
     {
-        string pw;
-        string input;
-        string hiddenInput;
-        Interlock interlock;
-        int InterlockGroup;
-        Crestron.SimplSharpPro.StringInputSig sternText;
-        int lastActiveGroup = 0;
-        public Passwort(string passwort, Interlock interlock, int InterlockGroup, Crestron.SimplSharpPro.StringInputSig sternText)
+        string _pw;
+        string _input;
+        string _hiddenInput;
+        Interlock _interlock;
+        int _interlockGroup;
+        Crestron.SimplSharpPro.StringInputSig _sternText;
+        int _lastActiveGroup = 0;
+        public Passwort(string passwort, Interlock interlock, int interlockGroup, Crestron.SimplSharpPro.StringInputSig sternText)
         {
-            this.pw=passwort;
-            this.sternText=sternText;
-            this.interlock=interlock;
-            this.InterlockGroup = InterlockGroup;
+            this._pw=passwort;
+            this._sternText=sternText;
+            this._interlock=interlock;
+            this._interlockGroup = interlockGroup;
         }
 
 
 
         
-        public void addKeytoInput(char x)
+        public void AddKeytoInput(char x)
         {
-            input = input+ x;
-            hiddenInput = hiddenInput + '*';
-            sternText.StringValue = hiddenInput;
+            _input = _input+ x;
+            _hiddenInput = _hiddenInput + '*';
+            _sternText.StringValue = _hiddenInput;
         } 
         
 
-        public void checkPassword()
+        public void CheckPassword()
         {
-            if (input == pw)
+            if (_input == _pw)
             {
-                interlock.activate(InterlockGroup);
+                _interlock.Activate(_interlockGroup);
             }
-            clearInput();
+            ClearInput();
 
         }
 
-        public void clearInput()
+        public void ClearInput()
         {
-            input ="";
-            hiddenInput = "";
-            sternText.StringValue = hiddenInput;
+            _input ="";
+            _hiddenInput = "";
+            _sternText.StringValue = _hiddenInput;
         }
 
-        public void exit()
+        public void Exit()
         {
-            clearInput();
-            interlock.activate(lastActiveGroup);
+            ClearInput();
+            _interlock.Activate(_lastActiveGroup);
         }
     }
 }

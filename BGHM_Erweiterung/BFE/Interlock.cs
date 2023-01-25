@@ -1,52 +1,48 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Crestron.SimplSharp;
 using Crestron.SimplSharpPro;
-using Crestron.SimplSharpPro.DeviceSupport;
-using Crestron.SimplSharpPro.Diagnostics;
 
 namespace BFE
 {
     
     class Interlock
     {
-        private int activeGroup = 0;
-        private int lastActiveGroup = 0;
+        private int _activeGroup;
+        private int _lastActiveGroup;
 
-        List<List<BoolInputSig>> joins; 
+        readonly List<List<BoolInputSig>> _joins; 
 
         public Interlock() { 
-            joins = new List<List<BoolInputSig>>();
+            _joins = new List<List<BoolInputSig>>();
 
         }
 
-        public int GetActiveGroup() { return activeGroup; }
+        public int GetActiveGroup() { return _activeGroup; }
 
-        public int GetLastActiveGroup() { return lastActiveGroup; }
+        public int GetLastActiveGroup() { return _lastActiveGroup; }
         public void AddJoin(BoolInputSig join,int group)
         {
-            joins[group].Add(join);
+            _joins[group].Add(join);
         }
 
-        public int addGroup()
+        public int AddGroup()
         {
-            joins.Add(new List<BoolInputSig>());
-            return joins.Count()-1;
+            _joins.Add(new List<BoolInputSig>());
+            return _joins.Count()-1;
         }
 
 
-        public void activate(int Group)
+        public void Activate(int group)
         {
             try
             {
                 CrestronConsole.PrintLine("Moin");
-                lastActiveGroup = activeGroup;
-                activeGroup = Group;
+                _lastActiveGroup = _activeGroup;
+                _activeGroup = group;
 
-                foreach (List<BoolInputSig> list in joins)
+                foreach (List<BoolInputSig> list in _joins)
                 {
                     foreach (BoolInputSig input in list)
                     {
@@ -55,7 +51,7 @@ namespace BFE
                 }
                 CrestronConsole.PrintLine("Moin");
 
-                foreach (BoolInputSig input in joins[Group])
+                foreach (BoolInputSig input in _joins[group])
                 {
                     input.BoolValue = true;
                 }

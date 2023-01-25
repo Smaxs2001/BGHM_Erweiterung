@@ -10,12 +10,12 @@ namespace BFE.HelpersX
     {
         public class VolumeNamedControlEventArgs : EventArgs
         {
-            public VolumeNamedControlEventArgs(string controlName, double Position)
+            public VolumeNamedControlEventArgs(string controlName, double position)
             {
-                this.controlName = controlName;
-                this.Position = Position;
+                this.ControlName = controlName;
+                this.Position = position;
             }
-            public string controlName { get; }
+            public string ControlName { get; }
 
             public double Position { get; }
         }

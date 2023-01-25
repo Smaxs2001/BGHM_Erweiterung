@@ -22,14 +22,14 @@ namespace BFE
         protected ushort VolumeType;
         protected double Increment;
 
-        private System.Timers.Timer VolumeUpTimer;
-        private System.Timers.Timer VolumeDownTimer;
+        private System.Timers.Timer _volumeUpTimer;
+        private System.Timers.Timer _volumeDownTimer;
 
         protected double MaxLevel = 65535;
         protected double MinLevel = 0;
         protected double VolumeLevel;
-        private double lastLevel;
-        protected bool muted = false;
+        private double _lastLevel;
+        protected bool Muted = false;
 
 
 
@@ -48,20 +48,20 @@ namespace BFE
             VolumeNameJoin.StringValue = volumeName;
             SymbolJoin.UShortValue = VolumeType;
 
-            VolumeUpTimer = new System.Timers.Timer();
-            VolumeUpTimer.Interval = 60;
-            VolumeUpTimer.AutoReset = true;
-            VolumeUpTimer.Elapsed += VolumeUp;
+            _volumeUpTimer = new System.Timers.Timer();
+            _volumeUpTimer.Interval = 60;
+            _volumeUpTimer.AutoReset = true;
+            _volumeUpTimer.Elapsed += VolumeUp;
 
-            VolumeDownTimer = new System.Timers.Timer();
-            VolumeDownTimer.Interval = 60;
-            VolumeDownTimer.AutoReset = true;
-            VolumeDownTimer.Elapsed += VolumeDown;
+            _volumeDownTimer = new System.Timers.Timer();
+            _volumeDownTimer.Interval = 60;
+            _volumeDownTimer.AutoReset = true;
+            _volumeDownTimer.Elapsed += VolumeDown;
         }
 
-        public bool getmuted()
+        public bool Getmuted()
         {
-            return muted;
+            return Muted;
         }
         virtual public void UpdateVolume()
         {
@@ -70,21 +70,21 @@ namespace BFE
 
         public void VolumeUpStart()
         {
-            if (muted) return;
-            VolumeUpTimer.Start();
+            if (Muted) return;
+            _volumeUpTimer.Start();
         }
 
         public void VolumeUpStop()
         {
-            VolumeUpTimer.Stop();
+            _volumeUpTimer.Stop();
         }
-        private void VolumeUp(object Sender,EventArgs args)
+        private void VolumeUp(object sender,EventArgs args)
         {
             
             VolumeLevel = (VolumeLevel + Increment);
             if(VolumeLevel > MaxLevel-Increment)
             {
-                VolumeUpTimer.Stop();
+                _volumeUpTimer.Stop();
                 VolumeLevel = MaxLevel;
             }
 
@@ -94,20 +94,20 @@ namespace BFE
 
         public void VolumeDownStart()
         {
-            if (muted) return;
-            VolumeDownTimer.Start();
+            if (Muted) return;
+            _volumeDownTimer.Start();
         }
 
         public void VolumeDownStop()
         {
-            VolumeDownTimer.Stop();
+            _volumeDownTimer.Stop();
         }
-        private void VolumeDown(object Sender, EventArgs args)
+        private void VolumeDown(object sender, EventArgs args)
         {
             VolumeLevel = (VolumeLevel - Increment);
             if (VolumeLevel < MinLevel+Increment)
             {
-                VolumeDownTimer.Stop();
+                _volumeDownTimer.Stop();
                 VolumeLevel = MinLevel;
             }
 
@@ -115,20 +115,20 @@ namespace BFE
 
         }
 
-        virtual public void mute()
+        virtual public void Mute()
         {
-            if (muted)
+            if (Muted)
             {
-                VolumeLevel = lastLevel;
+                VolumeLevel = _lastLevel;
                 SymbolJoin.UShortValue = (ushort)VolumeType;
             }
             else
             {
-                lastLevel = VolumeLevel;
+                _lastLevel = VolumeLevel;
                 SymbolJoin.UShortValue = (ushort)(VolumeType+1);
             }
 
-            muted = !muted;
+            Muted = !Muted;
             UpdateVolume();
         }
 

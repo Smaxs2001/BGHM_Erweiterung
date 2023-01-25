@@ -46,11 +46,11 @@ namespace BFE.HelpersX
                     so.BooleanInput[(ushort)index].BoolValue = state;
             }
         }
-        public static void SetSmartObjectSelected(BasicTriListWithSmartObject device, uint SmartObjectID, int index, bool state)
+        public static void SetSmartObjectSelected(BasicTriListWithSmartObject device, uint smartObjectId, int index, bool state)
         {
             if (device == null)
                 return;
-            SetSmartObjectSelected(device.SmartObjects[SmartObjectID], index, state);
+            SetSmartObjectSelected(device.SmartObjects[smartObjectId], index, state);
         }
         public static void ToggleSmartObjectSelected(SmartObject so, int index)
         {
@@ -75,11 +75,11 @@ namespace BFE.HelpersX
                 ErrorLog.Notice("ToggleSmartObjectSelected exception: {0}", e.Message);
             }
         }
-        public static void ToggleSmartObjectSelected(BasicTriListWithSmartObject device, uint SmartObjectID, int index)
+        public static void ToggleSmartObjectSelected(BasicTriListWithSmartObject device, uint smartObjectId, int index)
         {
             if (device == null)
                 return;
-            ToggleSmartObjectSelected(device.SmartObjects[SmartObjectID], index);
+            ToggleSmartObjectSelected(device.SmartObjects[smartObjectId], index);
         }
 
         public static void SetSmartObjectVisible(SmartObject so, int index, bool state)
@@ -90,11 +90,11 @@ namespace BFE.HelpersX
             //ErrorLog.Notice("SO visible name: {0}", name);
             SetSmartObjectDigitalJoin(so, name, state);
         }
-        public static void SetSmartObjectVisible(BasicTriListWithSmartObject device, uint SmartObjectID, int index, bool state)
+        public static void SetSmartObjectVisible(BasicTriListWithSmartObject device, uint smartObjectId, int index, bool state)
         {
             if (device == null)
                 return;
-            SetSmartObjectVisible(device.SmartObjects[SmartObjectID], index, state);
+            SetSmartObjectVisible(device.SmartObjects[smartObjectId], index, state);
         }
         public static void ToggleSmartObjectVisible(SmartObject so, int index)
         {
@@ -110,11 +110,11 @@ namespace BFE.HelpersX
                 ErrorLog.Notice("ToggleSmartObjectVisible exception: {0}", e.Message);
             }
         }
-        public static void ToggleSmartObjectVisible(BasicTriListWithSmartObject device, uint SmartObjectID, int index)
+        public static void ToggleSmartObjectVisible(BasicTriListWithSmartObject device, uint smartObjectId, int index)
         {
             if (device == null)
                 return;
-            ToggleSmartObjectVisible(device.SmartObjects[SmartObjectID], index);
+            ToggleSmartObjectVisible(device.SmartObjects[smartObjectId], index);
         }
 
         public static void SetSmartObjectEnable(SmartObject so, int index, bool state)
@@ -131,11 +131,11 @@ namespace BFE.HelpersX
             var name = "Item " + index + " Enabled";
             SetSmartObjectDigitalJoin(so, name, state);
         }
-        public static void SetSmartObjectEnabled(BasicTriListWithSmartObject device, uint SmartObjectID, int index, bool state)
+        public static void SetSmartObjectEnabled(BasicTriListWithSmartObject device, uint smartObjectId, int index, bool state)
         {
             if (device == null)
                 return;
-            SetSmartObjectEnabled(device.SmartObjects[SmartObjectID], index, state);
+            SetSmartObjectEnabled(device.SmartObjects[smartObjectId], index, state);
         }
         public static void ToggleSmartObjectEnabled(SmartObject so, int index)
         {
@@ -151,11 +151,11 @@ namespace BFE.HelpersX
                 ErrorLog.Notice("ToggleSmartObjectEnable exception: {0}", e.Message);
             }
         }
-        public static void ToggleSmartObjectEnabled(BasicTriListWithSmartObject device, uint SmartObjectID, int index)
+        public static void ToggleSmartObjectEnabled(BasicTriListWithSmartObject device, uint smartObjectId, int index)
         {
             if (device == null)
                 return;
-            ToggleSmartObjectEnabled(device.SmartObjects[SmartObjectID], index);
+            ToggleSmartObjectEnabled(device.SmartObjects[smartObjectId], index);
         }
 
         public static bool GetSmartObjectDigitalJoin(SmartObject so, string name)
@@ -170,9 +170,9 @@ namespace BFE.HelpersX
             }
             return false;
         }
-        public static bool GetSmartObjectDigitalJoin(BasicTriListWithSmartObject device, uint SmartObjectID, string name)
+        public static bool GetSmartObjectDigitalJoin(BasicTriListWithSmartObject device, uint smartObjectId, string name)
         {
-            return GetSmartObjectDigitalJoin(device.SmartObjects[SmartObjectID], name);
+            return GetSmartObjectDigitalJoin(device.SmartObjects[smartObjectId], name);
         }
         public static bool GetSmartObjectDigitalJoin(SmartObject so, int index)
         {
@@ -189,9 +189,9 @@ namespace BFE.HelpersX
             }
 
         }
-        public static bool GetSmartObjectDigitalJoin(BasicTriListWithSmartObject device, uint SmartObjectID, int index)
+        public static bool GetSmartObjectDigitalJoin(BasicTriListWithSmartObject device, uint smartObjectId, int index)
         {
-            return GetSmartObjectDigitalJoin(device.SmartObjects[SmartObjectID], index);
+            return GetSmartObjectDigitalJoin(device.SmartObjects[smartObjectId], index);
         }
 
         public static void SetSmartObjectDigitalListJoin(SmartObject so, int index, bool state)
@@ -214,9 +214,9 @@ namespace BFE.HelpersX
                 //ErrorLog.Notice("SetSmartObjectDigitalJoin exception: {0}", e.Message);
             }
         }
-        public static void SetSmartObjectDigitalJoin(BasicTriListWithSmartObject device, uint SmartObjectID, int index, bool state)
+        public static void SetSmartObjectDigitalJoin(BasicTriListWithSmartObject device, uint smartObjectId, int index, bool state)
         {
-            SetSmartObjectDigitalJoin(device.SmartObjects[SmartObjectID], index, state);
+            SetSmartObjectDigitalJoin(device.SmartObjects[smartObjectId], index, state);
         }
         public static void ToggleSmartObjectDigitalJoin(SmartObject so, int index)
         {
@@ -229,9 +229,9 @@ namespace BFE.HelpersX
                 ErrorLog.Notice("ToggleSmartObjectDigitalJoin exception: {0}", e.Message);
             }
         }
-        public static void ToggleSmartObjectDigitalJoin(BasicTriListWithSmartObject device, uint SmartObjectID, int index)
+        public static void ToggleSmartObjectDigitalJoin(BasicTriListWithSmartObject device, uint smartObjectId, int index)
         {
-            ToggleSmartObjectDigitalJoin(device.SmartObjects[SmartObjectID], index);
+            ToggleSmartObjectDigitalJoin(device.SmartObjects[smartObjectId], index);
         }
 
         #endregion
@@ -262,9 +262,9 @@ namespace BFE.HelpersX
                 ErrorLog.Notice("SetSmartObjectValue exception: {0}", e.Message);
             }
         }
-        public static void SetSmartObjectValue(BasicTriListWithSmartObject device, uint SmartObjectID, string name, ushort state)
+        public static void SetSmartObjectValue(BasicTriListWithSmartObject device, uint smartObjectId, string name, ushort state)
         {
-            SetSmartObjectValue(device.SmartObjects[SmartObjectID], name, state);
+            SetSmartObjectValue(device.SmartObjects[smartObjectId], name, state);
         }
         public static void SetSmartObjectValue(SmartObject so, int index, ushort state)
         {
@@ -277,9 +277,9 @@ namespace BFE.HelpersX
                 ErrorLog.Notice("SetSmartObjectDigitalJoin exception: {0}", e.Message);
             }
         }
-        public static void SetSmartObjectValue(BasicTriListWithSmartObject device, uint SmartObjectID, int index, ushort state)
+        public static void SetSmartObjectValue(BasicTriListWithSmartObject device, uint smartObjectId, int index, ushort state)
         {
-            SetSmartObjectValue(device.SmartObjects[SmartObjectID], index, state);
+            SetSmartObjectValue(device.SmartObjects[smartObjectId], index, state);
         }
         // Icons "Set Item 1 Analog"
         public static void SetSmartObjectIconAnalog(SmartObject so, int index, ushort state)
@@ -320,9 +320,9 @@ namespace BFE.HelpersX
             }
             return 0;
         }
-        public static ushort GetSmartObjectAnalogJoin(BasicTriListWithSmartObject device, uint SmartObjectID, string name)
+        public static ushort GetSmartObjectAnalogJoin(BasicTriListWithSmartObject device, uint smartObjectId, string name)
         {
-            return GetSmartObjectAnalogJoin(device.SmartObjects[SmartObjectID], name);
+            return GetSmartObjectAnalogJoin(device.SmartObjects[smartObjectId], name);
         }
         public static ushort GetSmartObjectAnalogJoin(SmartObject so, int index)
         {
@@ -339,9 +339,9 @@ namespace BFE.HelpersX
             }
 
         }
-        public static ushort GetSmartObjectAnalogJoin(BasicTriListWithSmartObject device, uint SmartObjectID, int index)
+        public static ushort GetSmartObjectAnalogJoin(BasicTriListWithSmartObject device, uint smartObjectId, int index)
         {
-            return GetSmartObjectAnalogJoin(device.SmartObjects[SmartObjectID], index);
+            return GetSmartObjectAnalogJoin(device.SmartObjects[smartObjectId], index);
         }
 
         #endregion
@@ -371,9 +371,9 @@ namespace BFE.HelpersX
                 name = "Set " + name;
             SetSmartObjectText(so, name, state);
         }
-        public static void SetSmartObjectText(BasicTriListWithSmartObject device, uint SmartObjectID, int index, string state)
+        public static void SetSmartObjectText(BasicTriListWithSmartObject device, uint smartObjectId, int index, string state)
         {
-            SetSmartObjectText(device.SmartObjects[SmartObjectID], index, state);
+            SetSmartObjectText(device.SmartObjects[smartObjectId], index, state);
         }
         // some serials use format "text-i1"
         public static void SetSmartObjectInputText(SmartObject so, int index, string state)

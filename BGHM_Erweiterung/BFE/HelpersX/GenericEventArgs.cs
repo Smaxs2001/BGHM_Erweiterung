@@ -31,18 +31,18 @@ namespace BFE.HelpersX
         public int IntData { get; }
     }
 
-    public class CrestronEnumEventArgs_eHdcpCapabilityType : EventArgs
+    public class CrestronEnumEventArgsEHdcpCapabilityType : EventArgs
     {
-        public CrestronEnumEventArgs_eHdcpCapabilityType(eHdcpCapabilityType arg)
+        public CrestronEnumEventArgsEHdcpCapabilityType(eHdcpCapabilityType arg)
         {
             EnumData = arg;
         }
         public eHdcpCapabilityType EnumData { get; }
     }
 
-    public class CrestronEnumEventArgs_eSfpVideoSourceTypes : EventArgs
+    public class CrestronEnumEventArgsESfpVideoSourceTypes : EventArgs
     {
-        public CrestronEnumEventArgs_eSfpVideoSourceTypes(eSfpVideoSourceTypes arg)
+        public CrestronEnumEventArgsESfpVideoSourceTypes(eSfpVideoSourceTypes arg)
         {
             EnumData = arg;
         }
